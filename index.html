@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Toolbox" />
+<meta name="theme-color" content="#F9F8F4" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<title>Toolbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    /* Botanical / Organic palette */
+    --bg: #F9F8F4;            /* warm alabaster */
+    --bg-elevated: #FFFFFF;   /* card */
+    --bg-soft: #F2F0EB;       /* soft clay */
+    --text: #2D3A31;          /* deep forest */
+    --text-secondary: #5C6A5E;
+    --text-tertiary: #9AA39A;
+    --separator: #E6E2DA;     /* stone */
+    --accent: #8C9A84;        /* sage */
+    --accent-soft: #DCE2D7;   /* pale sage */
+    --secondary: #DCCFC2;     /* mushroom */
+    --interactive: #C27B66;   /* terracotta */
+    --good: #8C9A84;
+    --good-soft: #E3E8DD;
+    --warn: #B8915A;          /* warm honey */
+    --warn-soft: #EFE4D2;
+    --bad: #B5563E;           /* deep terracotta-rust */
+    --bad-soft: #F0DDD3;
+    --shadow-sm: 0 4px 6px -1px rgba(45,58,49,0.05);
+    --shadow:    0 10px 15px -3px rgba(45,58,49,0.06), 0 4px 6px -2px rgba(45,58,49,0.04);
+    --shadow-lg: 0 20px 40px -10px rgba(45,58,49,0.10);
+    --shadow-xl: 0 25px 50px -12px rgba(45,58,49,0.18);
+    --serif: "Playfair Display", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Deep-forest dark mode that keeps the warmth */
+      --bg: #1F2722;
+      --bg-elevated: #2A332D;
+      --bg-soft: #242C26;
+      --text: #EDEAE0;
+      --text-secondary: #B5BDB1;
+      --text-tertiary: #7B857C;
+      --separator: rgba(230, 226, 218, 0.10);
+      --accent: #A8B6A0;
+      --accent-soft: rgba(168, 182, 160, 0.14);
+      --secondary: #4A4036;
+      --interactive: #D08A75;
+      --good: #A8B6A0;
+      --good-soft: rgba(168, 182, 160, 0.16);
+      --warn: #D4B07A;
+      --warn-soft: rgba(212, 176, 122, 0.16);
+      --bad: #D08066;
+      --bad-soft: rgba(208, 128, 102, 0.16);
+      --shadow:    0 10px 25px -5px rgba(0,0,0,0.35);
+      --shadow-lg: 0 20px 40px -10px rgba(0,0,0,0.45);
+      --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.55);
+    }
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 400;
+    overscroll-behavior-y: contain;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    min-height: 100vh;
+  }
+
+  /* Paper grain texture — the soul of this design (CRITICAL) */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  button, input, textarea, select {
+    font: inherit; color: inherit;
+    border: none; background: none;
+    outline: none;
+  }
+
+  input, textarea, select { -webkit-appearance: none; appearance: none; }
+
+  ::selection { background: var(--accent-soft); color: var(--text); }
+
+  #app { max-width: 640px; margin: 0 auto; padding-bottom: 32px; }
+
+  /* ---------- Topbar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    background: color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter: saturate(140%) blur(16px);
+    -webkit-backdrop-filter: saturate(140%) blur(16px);
+    padding: 18px 22px 14px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--separator);
+  }
+  .topbar h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    flex: 1;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .topbar .icon-wrench {
+    width: 44px; height: 44px;
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .topbar .icon-wrench svg { width: 20px; height: 20px; }
+
+  .iconbtn {
+    width: 44px; height: 44px;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-elevated);
+    color: var(--text);
+    border: 1px solid var(--separator);
+    cursor: pointer;
+    transition: all 0.3s ease-out;
+    flex-shrink: 0;
+  }
+  .iconbtn:hover { color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .iconbtn:active { transform: scale(0.95); }
+  .iconbtn svg { width: 18px; height: 18px; }
+
+  /* ---------- Search & tabs ---------- */
+  .toolbar {
+    padding: 18px 22px 8px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .search {
+    background: var(--bg-soft);
+    border: 1px solid var(--separator);
+    border-radius: 999px;
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 10px;
+    transition: border-color 0.3s ease-out, background 0.3s ease-out;
+  }
+  .search:focus-within { border-color: var(--accent); background: var(--bg-elevated); }
+  .search svg { width: 16px; height: 16px; color: var(--text-tertiary); flex-shrink: 0; }
+  .search input {
+    flex: 1; font-size: 16px; background: transparent;
+    font-family: var(--sans); color: var(--text);
+  }
+  .search input::placeholder { color: var(--text-tertiary); font-style: italic; }
+
+  .tabs {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 9px 16px;
+    background: transparent;
+    border: 1px solid var(--separator);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.3s ease-out;
+    display: flex; align-items: center; gap: 8px;
+    min-height: 36px;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .tab .count {
+    background: rgba(255,255,255,0.18);
+    padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; min-width: 20px; text-align: center;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+  .tab:not(.active) .count { background: var(--bg-soft); color: var(--text-secondary); }
+
+  /* ---------- Stats cards ---------- */
+  .stats {
+    margin: 18px 22px 6px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .stat {
+    background: var(--bg-elevated);
+    border: 1px solid var(--separator);
+    border-radius: 24px;
+    padding: 18px 10px;
+    text-align: center;
+    transition: all 0.5s ease-out;
+  }
+  .stat:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .stat .num {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 36px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .stat .lbl {
+    font-size: 9.5px; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.18em;
+    margin-top: 8px; font-weight: 500;
+  }
+  .stat.good .num { color: var(--good); }
+  .stat.warn .num { color: var(--warn); }
+  .stat.bad .num  { color: var(--bad); }
+
+  /* ---------- Section title ---------- */
+  .section-title {
+    font-family: var(--sans);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--text-tertiary); font-weight: 500;
+    padding: 28px 28px 12px;
+  }
+
+  /* ---------- List (table-of-contents) ---------- */
+  .list {
+    margin: 4px 22px 0;
+    display: flex; flex-direction: column;
+    gap: 10px;
+  }
+  .list-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--separator);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.5s ease-out;
+    min-height: 64px;
+  }
+  .list-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    border-color: var(--accent-soft);
+  }
+  .list-item:active { transform: scale(0.99); }
+
+  .status-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+    margin: 0 4px 0 0;
+  }
+  .status-dot.good { background: var(--good); box-shadow: 0 0 0 4px var(--good-soft); }
+  .status-dot.warn { background: var(--warn); box-shadow: 0 0 0 4px var(--warn-soft); }
+  .status-dot.bad  { background: var(--bad);  box-shadow: 0 0 0 4px var(--bad-soft); }
+  .status-dot.none { background: var(--text-tertiary); box-shadow: 0 0 0 4px var(--bg-soft); }
+
+  .item-body { flex: 1; min-width: 0; }
+  .item-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 19px;
+    letter-spacing: -0.005em;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .item-sub {
+    font-size: 13px; color: var(--text-secondary);
+    margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: 0.01em;
+  }
+  .item-sub.bad  { color: var(--bad); font-style: italic; }
+  .item-sub.warn { color: var(--warn); font-style: italic; }
+
+  .chevron { color: var(--text-tertiary); flex-shrink: 0; transition: transform 0.3s ease-out, color 0.3s ease-out; }
+  .chevron svg { width: 12px; height: 12px; }
+  .list-item:hover .chevron { transform: translateX(3px); color: var(--accent); }
+
+  /* ---------- Empty state ---------- */
+  .empty {
+    text-align: center; padding: 72px 28px;
+    color: var(--text-secondary);
+  }
+  .empty .big { font-size: 56px; margin-bottom: 16px; opacity: 0.4; }
+  .empty .title {
+    font-family: var(--serif); font-style: italic; font-weight: 600;
+    font-size: 26px; color: var(--text); margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .empty .sub { font-size: 15px; line-height: 1.5; }
+
+  /* ---------- FAB ---------- */
+  .fab {
+    position: fixed;
+    bottom: calc(28px + env(safe-area-inset-bottom));
+    right: 24px;
+    width: 60px; height: 60px;
+    border-radius: 999px;
+    background: var(--text); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer; z-index: 40;
+    transition: all 0.3s ease-out;
+    border: 1px solid var(--text);
+  }
+  .fab:hover { background: var(--interactive); border-color: var(--interactive); transform: translateY(-2px); }
+  .fab:active { transform: scale(0.94); }
+  .fab svg { width: 22px; height: 22px; }
+
+  /* ---------- Sheet overlay ---------- */
+  .sheet-bg {
+    position: fixed; inset: 0;
+    background: rgba(45, 58, 49, 0.35);
+    z-index: 50;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s ease-out;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .sheet-bg.show { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    max-width: 640px; margin: 0 auto;
+    background: var(--bg);
+    border-radius: 32px 32px 0 0;
+    z-index: 60;
+    max-height: 92vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+    box-shadow: var(--shadow-xl);
+  }
+  .sheet.show { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 44px; height: 4px;
+    background: var(--separator);
+    border-radius: 999px;
+    margin: 12px auto 4px;
+  }
+
+  .sheet-header {
+    display: flex; align-items: center;
+    padding: 14px 18px 18px;
+    border-bottom: 1px solid var(--separator);
+    position: sticky; top: 0;
+    background: color-mix(in srgb, var(--bg) 95%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 1;
+  }
+  .sheet-header h2 {
+    margin: 0; flex: 1; text-align: center;
+    font-family: var(--serif); font-style: italic; font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .sheet-action {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    cursor: pointer; padding: 8px 6px;
+    min-width: 64px;
+    transition: color 0.3s ease-out;
+  }
+  .sheet-action:hover { color: var(--interactive); }
+  .sheet-action.bold { color: var(--text); font-weight: 600; text-align: right; }
+  .sheet-action.bold:hover { color: var(--interactive); }
+  .sheet-action.danger { color: var(--bad); }
+  .sheet-action.muted { color: var(--text-tertiary); }
+
+  .sheet-content { padding: 22px; }
+
+  /* ---------- Detail card ---------- */
+  .card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--separator);
+    border-radius: 32px;
+    padding: 28px 24px 26px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px;
+  }
+  .card.status-bad::before  { background: var(--bad); }
+  .card.status-warn::before { background: var(--warn); }
+  .card.status-good::before { background: var(--good); }
+  .card.status-none::before { background: var(--separator); }
+
+  .card .item-name {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 32px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--text);
+    margin-bottom: 12px;
+    word-wrap: break-word;
+  }
+  .card .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    margin-bottom: 22px;
+  }
+  .badge.good { background: var(--good-soft); color: var(--good); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.bad  { background: var(--bad-soft);  color: var(--bad); }
+  .badge.none { background: var(--bg-soft);   color: var(--text-secondary); }
+
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 22px;
+  }
+  .meta {
+    background: var(--bg-soft);
+    border-radius: 20px;
+    padding: 14px 16px;
+  }
+  .meta .lbl {
+    font-size: 9.5px; text-transform: uppercase;
+    letter-spacing: 0.2em; color: var(--text-secondary); font-weight: 500;
+  }
+  .meta .val {
+    font-family: var(--serif); font-weight: 600;
+    font-size: 17px; margin-top: 6px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+  }
+
+  .notes {
+    background: var(--bg-soft);
+    border-radius: 20px;
+    padding: 16px 18px;
+    font-size: 15px;
+    line-height: 1.65;
+    white-space: pre-wrap; word-wrap: break-word;
+    color: var(--text);
+    min-height: 48px;
+  }
+  .notes.empty-notes {
+    color: var(--text-tertiary); font-style: italic;
+    font-family: var(--serif); font-size: 16px;
+  }
+
+  /* ---------- Form ---------- */
+  .field-group {
+    background: var(--bg-elevated);
+    border: 1px solid var(--separator);
+    border-radius: 28px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .field {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--separator);
+  }
+  .field:last-child { border-bottom: none; }
+  .field label {
+    display: block;
+    font-size: 9.5px; text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .field input[type="text"],
+  .field input[type="date"],
+  .field textarea {
+    width: 100%;
+    background: transparent;
+    font-size: 16px;
+    font-family: var(--sans);
+    color: var(--text);
+    padding: 0;
+    border: none;
+    letter-spacing: 0.005em;
+  }
+  .field textarea {
+    resize: vertical; min-height: 110px;
+    font-family: var(--sans);
+    line-height: 1.55;
+  }
+  .field input::placeholder, .field textarea::placeholder {
+    color: var(--text-tertiary); font-style: italic;
+  }
+  .field select {
+    background: var(--bg-soft);
+    padding: 11px 16px;
+    border-radius: 999px;
+    font-size: 15px;
+    color: var(--text);
+    font-family: var(--sans);
+    border: 1px solid var(--separator);
+    cursor: pointer;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+      linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 30px;
+  }
+  /* Pill input for the schedule number */
+  .field input[type="text"]#f-sched-n {
+    background: var(--bg-soft);
+    padding: 11px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--separator);
+    text-align: center;
+    width: 100%;
+    transition: border-color 0.3s ease-out;
+  }
+  .field input[type="text"]#f-sched-n:focus { border-color: var(--accent); }
+  .field input[type="date"] {
+    color: var(--text);
+    font-family: var(--sans);
+  }
+
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row > * { flex: 1; }
+
+  .toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--separator);
+  }
+  .toggle:last-child { border-bottom: none; }
+  .toggle .lbl {
+    font-size: 16px;
+    font-family: var(--sans);
+    color: var(--text);
+  }
+  .switch {
+    position: relative; width: 52px; height: 30px;
+    background: var(--separator);
+    border-radius: 999px;
+    transition: background 0.3s ease-out;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .switch.on { background: var(--accent); }
+  .switch::after {
+    content: ''; position: absolute;
+    top: 3px; left: 3px;
+    width: 24px; height: 24px;
+    background: var(--bg-elevated); border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(45,58,49,0.18);
+    transition: transform 0.3s ease-out;
+  }
+  .switch.on::after { transform: translateX(22px); }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    padding: 16px 22px;
+    border-radius: 999px;
+    background: var(--text); color: var(--bg);
+    font-family: var(--sans);
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.2em;
+    text-align: center; cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease-out;
+    border: 1px solid var(--text);
+    min-height: 50px;
+  }
+  .btn:hover { background: var(--interactive); border-color: var(--interactive); }
+  .btn:active { transform: scale(0.98); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn.secondary:hover {
+    background: var(--accent-soft);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .btn.danger {
+    background: transparent;
+    color: var(--bad);
+    border: 1px solid var(--bad-soft);
+  }
+  .btn.danger:hover {
+    background: var(--bad-soft);
+    border-color: var(--bad);
+  }
+
+  /* ---------- Settings menu ---------- */
+  .menu-list {
+    background: var(--bg-elevated);
+    border: 1px solid var(--separator);
+    border-radius: 28px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .menu-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--separator);
+    cursor: pointer;
+    transition: background 0.3s ease-out;
+  }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item:hover { background: var(--bg-soft); }
+  .menu-icon {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+  .menu-icon svg { width: 17px; height: 17px; }
+  .menu-text {
+    flex: 1;
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+  }
+  .menu-sub {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed;
+    bottom: calc(110px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg);
+    padding: 12px 22px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.22em;
+    z-index: 100;
+    opacity: 0; pointer-events: none;
+    transition: all 0.4s ease-out;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path fill="currentColor" d="M22.7 4.5a1 1 0 0 0-1.7-.5l-3 3-2.1-2.1 3-3a1 1 0 0 0-.5-1.7 6.5 6.5 0 0 0-7.9 8.4L2.7 16.4a2.4 2.4 0 0 0 3.4 3.4l8.3-7.8a6.5 6.5 0 0 0 8.3-7.5zM5 18.5a1 1 0 1 1 1.4-1.4A1 1 0 0 1 5 18.5z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="m21 21-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 12 12"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="m4 2 4 4-4 4"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-1.7-1L15 3.5h-4l-.3 2.5a7.5 7.5 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.5 7.5 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3a1 1 0 0 0-1 1v1H5a1 1 0 0 0 0 2h1v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7h1a1 1 0 0 0 0-2h-3V4a1 1 0 0 0-1-1H9zm1 6a1 1 0 0 1 1 1v7a1 1 0 0 1-2 0v-7a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v7a1 1 0 0 1-2 0v-7a1 1 0 0 1 1-1z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20h14a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2zm7-18a1 1 0 0 1 1 1v11.59l3.3-3.3a1 1 0 0 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 1.4-1.42L11 14.6V3a1 1 0 0 1 1-1z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20h14a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2zM12 2a1 1 0 0 1 .7.3l5 5a1 1 0 0 1-1.4 1.4L13 5.4V17a1 1 0 1 1-2 0V5.4l-3.3 3.3a1 1 0 1 1-1.4-1.4l5-5A1 1 0 0 1 12 2z"/></symbol>
+    <symbol id="i-excel" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zM8 13l1.7 2.5L11.5 13h2l-2.7 4 2.8 4h-2l-1.8-2.7L8 21H6l2.8-4L6 13h2z"/></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+  <div class="topbar">
+    <h1>
+      <span class="icon-wrench"><svg><use href="#i-wrench"/></svg></span>
+      Toolbox
+    </h1>
+    <div class="iconbtn" id="settings-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg><use href="#i-search"/></svg>
+      <input id="search-input" placeholder="Search items..." type="text" />
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-filter="all">All <span class="count" id="c-all">0</span></div>
+      <div class="tab" data-filter="due">Due Now <span class="count" id="c-due">0</span></div>
+      <div class="tab" data-filter="soon">Soon <span class="count" id="c-soon">0</span></div>
+      <div class="tab" data-filter="ok">OK <span class="count" id="c-ok">0</span></div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat bad"><div class="num" id="s-bad">0</div><div class="lbl">Overdue</div></div>
+    <div class="stat warn"><div class="num" id="s-warn">0</div><div class="lbl">Due Soon</div></div>
+    <div class="stat good"><div class="num" id="s-good">0</div><div class="lbl">On Track</div></div>
+  </div>
+
+  <div id="list-container"></div>
+</div>
+
+<div class="fab" id="add-btn" aria-label="Add item"><svg><use href="#i-plus"/></svg></div>
+
+<!-- Detail sheet -->
+<div class="sheet-bg" id="detail-bg"></div>
+<div class="sheet" id="detail-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-action" id="detail-close">Close</span>
+    <h2 id="detail-title">Item</h2>
+    <span class="sheet-action bold" id="detail-edit">Edit</span>
+  </div>
+  <div class="sheet-content" id="detail-content"></div>
+</div>
+
+<!-- Form sheet -->
+<div class="sheet-bg" id="form-bg"></div>
+<div class="sheet" id="form-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-action muted" id="form-cancel">Cancel</span>
+    <h2 id="form-title">New Item</h2>
+    <span class="sheet-action bold" id="form-save">Save</span>
+  </div>
+  <div class="sheet-content">
+    <div class="field-group">
+      <div class="field">
+        <label>Title</label>
+        <input id="f-title" type="text" placeholder="e.g., Air filter, Smoke detector battery" />
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Anything you want to remember about this item..."></textarea>
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label>Date (last done / start)</label>
+        <input id="f-date" type="date" />
+      </div>
+      <div class="toggle">
+        <span class="lbl">Maintenance schedule</span>
+        <div class="switch" id="f-sched-toggle"></div>
+      </div>
+      <div class="field hidden" id="f-sched-row">
+        <label>Repeat every</label>
+        <div class="row">
+          <input id="f-sched-n" type="text" inputmode="numeric" pattern="[0-9]*" value="6" />
+          <select id="f-sched-unit">
+            <option value="day">Days</option>
+            <option value="week">Weeks</option>
+            <option value="month" selected>Months</option>
+            <option value="year">Years</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="form-delete-wrap" class="hidden">
+      <div class="btn danger" id="form-delete">Delete Item</div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="sheet-bg" id="settings-bg"></div>
+<div class="sheet" id="settings-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-action" id="settings-close">Done</span>
+    <h2>Settings</h2>
+    <span class="sheet-action" style="visibility:hidden">x</span>
+  </div>
+  <div class="sheet-content">
+    <div class="section-title" style="padding-left: 4px;">Data</div>
+    <div class="menu-list">
+      <div class="menu-item" id="export-json">
+        <div class="menu-icon" style="background: var(--accent);"><svg><use href="#i-download"/></svg></div>
+        <div>
+          <div class="menu-text">Export Backup (JSON)</div>
+          <div class="menu-sub">Save full data to transfer phones</div>
+        </div>
+      </div>
+      <div class="menu-item" id="import-json">
+        <div class="menu-icon" style="background: var(--good);"><svg><use href="#i-upload"/></svg></div>
+        <div>
+          <div class="menu-text">Import Backup (JSON)</div>
+          <div class="menu-sub">Restore from a previous export</div>
+        </div>
+      </div>
+      <div class="menu-item" id="export-xlsx">
+        <div class="menu-icon" style="background: #1d6f42;"><svg><use href="#i-excel"/></svg></div>
+        <div>
+          <div class="menu-text">Export to Excel (.xlsx)</div>
+          <div class="menu-sub">Spreadsheet of all items</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" style="padding-left: 4px;">Danger</div>
+    <div class="menu-list">
+      <div class="menu-item" id="clear-all">
+        <div class="menu-icon" style="background: var(--bad);"><svg><use href="#i-trash"/></svg></div>
+        <div>
+          <div class="menu-text" style="color: var(--bad);">Clear All Data</div>
+          <div class="menu-sub">Remove every item permanently</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; color: var(--text-tertiary); font-size: 12px; margin-top: 24px;">
+      Toolbox · v1.0 · Data stays on your device
+    </div>
+  </div>
+
+  <input type="file" id="import-file" accept="application/json,.json" style="display:none" />
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+ * Toolbox — local-first maintenance tracker.
+ * Data is stored in localStorage on the device. Nothing leaves.
+ * ============================================================ */
+
+const STORAGE_KEY = "toolbox.items.v1";
+const DAY = 86400000;
+const SOON_THRESHOLD_DAYS = 30;
+
+let state = {
+  items: [],
+  filter: "all",
+  search: "",
+  editingId: null
+};
+
+/* ---------- Persistence ---------- */
+function loadItems() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    state.items = raw ? JSON.parse(raw) : [];
+  } catch (e) { state.items = []; }
+}
+function saveItems() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+}
+
+/* ---------- Utilities ---------- */
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+function todayISO() {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const da = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${da}`;
+}
+function parseISO(s) {
+  if (!s) return null;
+  const [y,m,d] = s.split("-").map(Number);
+  if (!y) return null;
+  return new Date(y, m-1, d);
+}
+function fmtDate(iso) {
+  const d = parseISO(iso);
+  if (!d) return "—";
+  return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
+}
+function addInterval(date, n, unit) {
+  const d = new Date(date);
+  n = parseInt(n, 10) || 0;
+  if (unit === "day")   d.setDate(d.getDate() + n);
+  if (unit === "week")  d.setDate(d.getDate() + n*7);
+  if (unit === "month") d.setMonth(d.getMonth() + n);
+  if (unit === "year")  d.setFullYear(d.getFullYear() + n);
+  return d;
+}
+function nextDueDate(item) {
+  if (!item.schedule || !item.schedule.enabled) return null;
+  const base = parseISO(item.date);
+  if (!base) return null;
+  return addInterval(base, item.schedule.n, item.schedule.unit);
+}
+function statusOf(item) {
+  const due = nextDueDate(item);
+  if (!due) return { level: "none", label: "No schedule" };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((due - today) / DAY);
+  if (diff < 0)   return { level: "bad",  label: `Overdue by ${Math.abs(diff)} day${Math.abs(diff)===1?"":"s"}`, daysUntil: diff, due };
+  if (diff === 0) return { level: "bad",  label: "Due today", daysUntil: 0, due };
+  if (diff <= SOON_THRESHOLD_DAYS) return { level: "warn", label: `Due in ${diff} day${diff===1?"":"s"}`, daysUntil: diff, due };
+  return { level: "good", label: `Due in ${diff} days`, daysUntil: diff, due };
+}
+function scheduleLabel(s) {
+  if (!s || !s.enabled) return "None";
+  const n = parseInt(s.n,10) || 0;
+  const word = (n === 1 ? s.unit : s.unit+"s");
+  return `Every ${n} ${word}`;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[c]));
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+/* ---------- Render ---------- */
+function render() {
+  const items = state.items;
+  let bad=0, warn=0, good=0, none=0;
+  for (const it of items) {
+    const s = statusOf(it).level;
+    if (s === "bad") bad++;
+    else if (s === "warn") warn++;
+    else if (s === "good") good++;
+    else none++;
+  }
+  document.getElementById("s-bad").textContent  = bad;
+  document.getElementById("s-warn").textContent = warn;
+  document.getElementById("s-good").textContent = good + none;
+
+  document.getElementById("c-all").textContent  = items.length;
+  document.getElementById("c-due").textContent  = bad;
+  document.getElementById("c-soon").textContent = warn;
+  document.getElementById("c-ok").textContent   = good + none;
+
+  const q = state.search.trim().toLowerCase();
+  let filtered = items.filter(it => {
+    if (q) {
+      const hay = (it.title + " " + (it.notes||"")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (state.filter === "all") return true;
+    const lvl = statusOf(it).level;
+    if (state.filter === "due")  return lvl === "bad";
+    if (state.filter === "soon") return lvl === "warn";
+    if (state.filter === "ok")   return lvl === "good" || lvl === "none";
+    return true;
+  });
+
+  const order = { bad:0, warn:1, good:2, none:3 };
+  filtered.sort((a,b) => {
+    const sa = statusOf(a), sb = statusOf(b);
+    if (order[sa.level] !== order[sb.level]) return order[sa.level] - order[sb.level];
+    const da = sa.due ? sa.due.getTime() : Infinity;
+    const db = sb.due ? sb.due.getTime() : Infinity;
+    if (da !== db) return da - db;
+    return (a.title||"").localeCompare(b.title||"");
+  });
+
+  const container = document.getElementById("list-container");
+  if (filtered.length === 0) {
+    container.innerHTML = items.length === 0
+      ? `<div class="empty">
+           <div class="big">🔧</div>
+           <div class="title">No items yet</div>
+           <div class="sub">Tap the + button to add your first item.</div>
+         </div>`
+      : `<div class="empty">
+           <div class="title">No matches</div>
+           <div class="sub">Try a different search or filter.</div>
+         </div>`;
+    return;
+  }
+
+  let html = '<div class="section-title">Items</div><div class="list">';
+  for (const it of filtered) {
+    const s = statusOf(it);
+    const subClass = s.level === "bad" ? "bad" : s.level === "warn" ? "warn" : "";
+    const sub = it.schedule && it.schedule.enabled
+      ? s.label
+      : (it.date ? `Logged ${fmtDate(it.date)}` : "Tap to view");
+    html += `
+      <div class="list-item" data-id="${escapeHtml(it.id)}">
+        <div class="status-dot ${s.level}"></div>
+        <div class="item-body">
+          <div class="item-title">${escapeHtml(it.title || "Untitled")}</div>
+          <div class="item-sub ${subClass}">${escapeHtml(sub)}</div>
+        </div>
+        <div class="chevron"><svg><use href="#i-chevron"/></svg></div>
+      </div>`;
+  }
+  html += "</div>";
+  container.innerHTML = html;
+
+  container.querySelectorAll(".list-item").forEach(el => {
+    el.addEventListener("click", () => openDetail(el.dataset.id));
+  });
+}
+
+/* ---------- Detail ---------- */
+function openDetail(id) {
+  const it = state.items.find(x => x.id === id);
+  if (!it) return;
+  state.editingId = id;
+  document.getElementById("detail-title").textContent = it.title || "Item";
+  const s = statusOf(it);
+
+  const lastDate = it.date ? fmtDate(it.date) : "—";
+  const sched = scheduleLabel(it.schedule);
+  const due = nextDueDate(it);
+  const dueText = due ? due.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}) : "—";
+
+  const notesHtml = it.notes
+    ? `<div class="notes">${escapeHtml(it.notes)}</div>`
+    : `<div class="notes empty-notes">No notes added.</div>`;
+
+  const badgeIcon = s.level === 'bad' ? '⚠'
+                  : s.level === 'warn' ? '⏰'
+                  : s.level === 'good' ? '✓' : '○';
+
+  document.getElementById("detail-content").innerHTML = `
+    <div class="card status-${s.level}">
+      <div class="item-name">${escapeHtml(it.title || "Untitled")}</div>
+      <div class="badge ${s.level}">
+        ${badgeIcon} ${escapeHtml(s.label)}
+      </div>
+      <div class="meta-grid">
+        <div class="meta"><div class="lbl">Last Done</div><div class="val">${escapeHtml(lastDate)}</div></div>
+        <div class="meta"><div class="lbl">Schedule</div><div class="val">${escapeHtml(sched)}</div></div>
+        <div class="meta"><div class="lbl">Next Due</div><div class="val">${escapeHtml(dueText)}</div></div>
+        <div class="meta"><div class="lbl">Created</div><div class="val">${escapeHtml(fmtDate(it.created))}</div></div>
+      </div>
+      <div class="section-title" style="padding: 4px 0 6px;">Notes</div>
+      ${notesHtml}
+    </div>
+    ${it.schedule && it.schedule.enabled ? `
+      <div class="btn secondary" id="mark-done">Mark Done Today</div>
+    ` : ''}
+  `;
+
+  const md = document.getElementById("mark-done");
+  if (md) md.addEventListener("click", () => {
+    it.date = todayISO();
+    it.updated = new Date().toISOString();
+    saveItems(); render(); openDetail(id);
+    toast("Marked done today");
+  });
+
+  showSheet("detail");
+}
+
+/* ---------- Form ---------- */
+function openForm(id) {
+  state.editingId = id || null;
+  const editing = !!id;
+  const it = editing ? state.items.find(x => x.id === id) : null;
+
+  document.getElementById("form-title").textContent = editing ? "Edit Item" : "New Item";
+  document.getElementById("f-title").value = it?.title || "";
+  document.getElementById("f-notes").value = it?.notes || "";
+  document.getElementById("f-date").value  = it?.date || todayISO();
+
+  const enabled = !!(it?.schedule?.enabled);
+  document.getElementById("f-sched-toggle").classList.toggle("on", enabled);
+  document.getElementById("f-sched-row").classList.toggle("hidden", !enabled);
+  document.getElementById("f-sched-n").value = it?.schedule?.n ?? 6;
+  document.getElementById("f-sched-unit").value = it?.schedule?.unit ?? "month";
+
+  document.getElementById("form-delete-wrap").classList.toggle("hidden", !editing);
+
+  showSheet("form");
+  if (!editing) {
+    setTimeout(() => document.getElementById("f-title").focus(), 250);
+  }
+}
+
+function saveForm() {
+  const title = document.getElementById("f-title").value.trim();
+  if (!title) { toast("Title required"); return; }
+  const notes = document.getElementById("f-notes").value;
+  const date  = document.getElementById("f-date").value || todayISO();
+  const enabled = document.getElementById("f-sched-toggle").classList.contains("on");
+  const n = parseInt(document.getElementById("f-sched-n").value, 10) || 1;
+  const unit = document.getElementById("f-sched-unit").value;
+
+  if (state.editingId) {
+    const it = state.items.find(x => x.id === state.editingId);
+    if (it) {
+      it.title = title; it.notes = notes; it.date = date;
+      it.schedule = { enabled, n, unit };
+      it.updated = new Date().toISOString();
+    }
+  } else {
+    state.items.push({
+      id: uid(),
+      title, notes, date,
+      schedule: { enabled, n, unit },
+      created: todayISO(),
+      updated: new Date().toISOString()
+    });
+  }
+  saveItems();
+  hideSheet("form");
+  render();
+  const wasEdit = !!state.editingId;
+  state.editingId = null;
+  toast(wasEdit ? "Saved" : "Added");
+}
+
+function deleteCurrent() {
+  if (!state.editingId) return;
+  if (!confirm("Delete this item? This can't be undone.")) return;
+  state.items = state.items.filter(x => x.id !== state.editingId);
+  saveItems();
+  hideSheet("form");
+  hideSheet("detail");
+  state.editingId = null;
+  render();
+  toast("Deleted");
+}
+
+/* ---------- Sheets ---------- */
+function showSheet(kind) {
+  document.getElementById(kind+"-bg").classList.add("show");
+  document.getElementById(kind+"-sheet").classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+function hideSheet(kind) {
+  document.getElementById(kind+"-bg").classList.remove("show");
+  document.getElementById(kind+"-sheet").classList.remove("show");
+  // Only re-enable scroll if no other sheet is open
+  const anyOpen = document.querySelectorAll(".sheet.show").length > 0;
+  if (!anyOpen) document.body.style.overflow = "";
+}
+
+/* ---------- Import / Export ---------- */
+function downloadFile(filename, content, type) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+function exportJSON() {
+  const payload = {
+    app: "Toolbox",
+    version: 1,
+    exported: new Date().toISOString(),
+    items: state.items
+  };
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadFile(`toolbox-backup-${stamp}.json`, JSON.stringify(payload, null, 2), "application/json");
+  toast("Backup exported");
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || !Array.isArray(data.items)) throw new Error("Invalid file");
+      const choice = confirm(
+        `Import ${data.items.length} item(s)?\n\n` +
+        `OK = merge with current items\n` +
+        `Cancel = stop (no changes)`
+      );
+      if (!choice) return;
+      const existing = new Set(state.items.map(x => x.id));
+      let added = 0;
+      for (const raw of data.items) {
+        if (!raw || !raw.title) continue;
+        const it = {
+          id: raw.id && !existing.has(raw.id) ? raw.id : uid(),
+          title: String(raw.title),
+          notes: raw.notes ? String(raw.notes) : "",
+          date: raw.date || todayISO(),
+          schedule: raw.schedule && typeof raw.schedule === "object"
+            ? {
+                enabled: !!raw.schedule.enabled,
+                n: parseInt(raw.schedule.n,10) || 1,
+                unit: ["day","week","month","year"].includes(raw.schedule.unit) ? raw.schedule.unit : "month"
+              }
+            : { enabled: false, n: 6, unit: "month" },
+          created: raw.created || todayISO(),
+          updated: new Date().toISOString()
+        };
+        state.items.push(it);
+        existing.add(it.id);
+        added++;
+      }
+      saveItems(); render();
+      toast(`Imported ${added} item(s)`);
+    } catch (err) {
+      alert("Could not import: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function exportXLSX() {
+  if (typeof XLSX === "undefined") {
+    alert("Excel library hasn't loaded yet. Connect to the internet once and reload to cache it.");
+    return;
+  }
+  if (state.items.length === 0) { toast("Nothing to export"); return; }
+  const rows = state.items.map(it => {
+    const s = statusOf(it);
+    const due = nextDueDate(it);
+    return {
+      Title: it.title,
+      Notes: it.notes || "",
+      "Last Done": it.date || "",
+      "Schedule": scheduleLabel(it.schedule),
+      "Next Due": due ? due.toISOString().slice(0,10) : "",
+      "Status": s.level === "bad" ? "Overdue" : s.level === "warn" ? "Due Soon" : s.level === "good" ? "On Track" : "No Schedule",
+      "Days Until Due": (s.daysUntil ?? ""),
+      "Created": it.created || ""
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = [
+    { wch: 28 }, { wch: 40 }, { wch: 12 }, { wch: 16 },
+    { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Toolbox Items");
+  const stamp = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `toolbox-${stamp}.xlsx`);
+  toast("Excel exported");
+}
+
+/* ---------- Init ---------- */
+function init() {
+  loadItems();
+  render();
+
+  document.getElementById("tabs").addEventListener("click", e => {
+    const t = e.target.closest(".tab");
+    if (!t) return;
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    state.filter = t.dataset.filter;
+    render();
+  });
+
+  document.getElementById("search-input").addEventListener("input", e => {
+    state.search = e.target.value;
+    render();
+  });
+
+  document.getElementById("add-btn").addEventListener("click", () => openForm(null));
+
+  document.getElementById("detail-close").addEventListener("click", () => hideSheet("detail"));
+  document.getElementById("detail-bg").addEventListener("click", () => hideSheet("detail"));
+  document.getElementById("detail-edit").addEventListener("click", () => {
+    const id = state.editingId;
+    hideSheet("detail");
+    setTimeout(() => openForm(id), 200);
+  });
+
+  document.getElementById("form-cancel").addEventListener("click", () => { state.editingId = null; hideSheet("form"); });
+  document.getElementById("form-bg").addEventListener("click", () => { state.editingId = null; hideSheet("form"); });
+  document.getElementById("form-save").addEventListener("click", saveForm);
+  document.getElementById("form-delete").addEventListener("click", deleteCurrent);
+  document.getElementById("f-sched-toggle").addEventListener("click", () => {
+    const t = document.getElementById("f-sched-toggle");
+    t.classList.toggle("on");
+    document.getElementById("f-sched-row").classList.toggle("hidden", !t.classList.contains("on"));
+  });
+
+  document.getElementById("settings-btn").addEventListener("click", () => showSheet("settings"));
+  document.getElementById("settings-close").addEventListener("click", () => hideSheet("settings"));
+  document.getElementById("settings-bg").addEventListener("click", () => hideSheet("settings"));
+
+  document.getElementById("export-json").addEventListener("click", exportJSON);
+  document.getElementById("export-xlsx").addEventListener("click", exportXLSX);
+  document.getElementById("import-json").addEventListener("click", () => {
+    document.getElementById("import-file").click();
+  });
+  document.getElementById("import-file").addEventListener("change", e => {
+    const f = e.target.files[0];
+    if (f) importJSON(f);
+    e.target.value = "";
+  });
+  document.getElementById("clear-all").addEventListener("click", () => {
+    if (!confirm("Delete ALL items? This cannot be undone.")) return;
+    if (!confirm("Really delete everything?")) return;
+    state.items = [];
+    saveItems(); render();
+    hideSheet("settings");
+    toast("All data cleared");
+  });
+
+  // PWA service worker — caches the app shell so it works offline
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  }
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
