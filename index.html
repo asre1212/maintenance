@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -490,6 +491,21 @@
     color: var(--text-tertiary); font-style: italic;
     font-family: var(--serif); font-size: 16px;
   }
+  /* Notes-focused variant: when there's no maintenance schedule,
+     the notes block becomes the body of the card — taller, airier. */
+  .notes.notes-large {
+    background: transparent;
+    padding: 8px 0 0;
+    font-size: 17px;
+    line-height: 1.7;
+    min-height: 220px;
+    color: var(--text);
+  }
+  .notes.notes-large.empty-notes {
+    font-size: 18px;
+    color: var(--text-tertiary);
+  }
+  .card-notes-only .item-name { margin-bottom: 18px; }
 
   /* ---------- Form ---------- */
   .field-group {
@@ -1056,30 +1072,40 @@ function openDetail(id) {
   const due = nextDueDate(it);
   const dueText = due ? due.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}) : "—";
 
+  const hasSchedule = !!(it.schedule && it.schedule.enabled);
+
   const notesHtml = it.notes
-    ? `<div class="notes">${escapeHtml(it.notes)}</div>`
-    : `<div class="notes empty-notes">No notes added.</div>`;
+    ? `<div class="notes${hasSchedule ? '' : ' notes-large'}">${escapeHtml(it.notes)}</div>`
+    : `<div class="notes empty-notes${hasSchedule ? '' : ' notes-large'}">No notes added.</div>`;
 
   const badgeIcon = s.level === 'bad' ? '⚠'
                   : s.level === 'warn' ? '⏰'
                   : s.level === 'good' ? '✓' : '○';
 
+  // When there's no maintenance schedule, the card becomes a clean,
+  // notes-focused view: no badge, no meta-grid, notes is the body.
+  const headerBlock = hasSchedule
+    ? `
+        <div class="badge ${s.level}">
+          ${badgeIcon} ${escapeHtml(s.label)}
+        </div>
+        <div class="meta-grid">
+          <div class="meta"><div class="lbl">Last Done</div><div class="val">${escapeHtml(lastDate)}</div></div>
+          <div class="meta"><div class="lbl">Schedule</div><div class="val">${escapeHtml(sched)}</div></div>
+          <div class="meta"><div class="lbl">Next Due</div><div class="val">${escapeHtml(dueText)}</div></div>
+          <div class="meta"><div class="lbl">Created</div><div class="val">${escapeHtml(fmtDate(it.created))}</div></div>
+        </div>
+        <div class="section-title" style="padding: 4px 0 6px;">Notes</div>
+      `
+    : '';
+
   document.getElementById("detail-content").innerHTML = `
-    <div class="card status-${s.level}">
+    <div class="card status-${s.level}${hasSchedule ? '' : ' card-notes-only'}">
       <div class="item-name">${escapeHtml(it.title || "Untitled")}</div>
-      <div class="badge ${s.level}">
-        ${badgeIcon} ${escapeHtml(s.label)}
-      </div>
-      <div class="meta-grid">
-        <div class="meta"><div class="lbl">Last Done</div><div class="val">${escapeHtml(lastDate)}</div></div>
-        <div class="meta"><div class="lbl">Schedule</div><div class="val">${escapeHtml(sched)}</div></div>
-        <div class="meta"><div class="lbl">Next Due</div><div class="val">${escapeHtml(dueText)}</div></div>
-        <div class="meta"><div class="lbl">Created</div><div class="val">${escapeHtml(fmtDate(it.created))}</div></div>
-      </div>
-      <div class="section-title" style="padding: 4px 0 6px;">Notes</div>
+      ${headerBlock}
       ${notesHtml}
     </div>
-    ${it.schedule && it.schedule.enabled ? `
+    ${hasSchedule ? `
       <div class="btn secondary" id="mark-done">Mark Done Today</div>
     ` : ''}
   `;
