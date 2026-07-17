@@ -709,6 +709,101 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- Attachments ---------- */
+  .attach-add {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 18px;
+    background: var(--bg-soft);
+    border: 1px dashed var(--separator);
+    border-radius: 18px;
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    cursor: pointer;
+    transition: all 0.3s ease-out;
+    margin-top: 4px;
+  }
+  .attach-add:hover { border-color: var(--accent); color: var(--interactive); }
+  .attach-add:active { transform: scale(0.98); }
+  .attach-add svg { width: 16px; height: 16px; }
+
+  .attach-list { display: flex; flex-direction: column; gap: 8px; }
+  .attach-list:not(:empty) { margin-bottom: 12px; }
+  .attach-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--separator);
+    border-radius: 16px;
+  }
+  .attach-thumb {
+    width: 44px; height: 44px; border-radius: 12px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-elevated);
+    border: 1px solid var(--separator);
+    color: var(--accent);
+    overflow: hidden;
+  }
+  .attach-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .attach-thumb svg { width: 20px; height: 20px; }
+  .attach-thumb.pdf { color: var(--bad); }
+  .attach-info { flex: 1; min-width: 0; }
+  .attach-name {
+    font-family: var(--sans); font-size: 14px; font-weight: 500;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .attach-meta {
+    font-size: 11px; color: var(--text-secondary);
+    margin-top: 2px; letter-spacing: 0.02em;
+  }
+  .attach-remove {
+    width: 30px; height: 30px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-elevated);
+    border: 1px solid var(--separator);
+    color: var(--text-tertiary);
+    cursor: pointer; flex-shrink: 0;
+    transition: all 0.3s ease-out;
+  }
+  .attach-remove:hover { color: var(--bad); border-color: var(--bad-soft); background: var(--bad-soft); }
+  .attach-remove svg { width: 13px; height: 13px; }
+
+  /* Attachment rows in the detail card are tappable to open */
+  .attach-row.tappable { cursor: pointer; transition: all 0.3s ease-out; }
+  .attach-row.tappable:hover { border-color: var(--accent-soft); box-shadow: var(--shadow-sm); }
+  .attach-row.tappable:active { transform: scale(0.99); }
+  .attach-open { color: var(--text-tertiary); flex-shrink: 0; }
+  .attach-open svg { width: 12px; height: 12px; }
+
+  /* ---------- Image preview overlay ---------- */
+  .preview-bg {
+    position: fixed; inset: 0;
+    background: rgba(31, 39, 34, 0.92);
+    z-index: 120;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .preview-bg.show { display: flex; }
+  .preview-bg img {
+    max-width: 100%; max-height: 100%;
+    border-radius: 12px;
+    box-shadow: var(--shadow-xl);
+    object-fit: contain;
+  }
+  .preview-close {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 14px); right: 16px;
+    width: 44px; height: 44px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.14); color: #fff;
+    cursor: pointer; z-index: 1;
+  }
+  .preview-close svg { width: 20px; height: 20px; }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -726,6 +821,10 @@
     <symbol id="i-upload" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20h14a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2zM12 2a1 1 0 0 1 .7.3l5 5a1 1 0 0 1-1.4 1.4L13 5.4V17a1 1 0 1 1-2 0V5.4l-3.3 3.3a1 1 0 1 1-1.4-1.4l5-5A1 1 0 0 1 12 2z"/></symbol>
     <symbol id="i-excel" viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zM8 13l1.7 2.5L11.5 13h2l-2.7 4 2.8 4h-2l-1.8-2.7L8 21H6l2.8-4L6 13h2z"/></symbol>
     <symbol id="i-refresh" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.65-5.65L20 8M20 4v4h-4M20 12a8 8 0 0 1-13.65 5.65L4 16m0 4v-4h4"/></symbol>
+    <symbol id="i-paperclip" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 8.5 12.4 17a4 4 0 0 1-5.66-5.66l8.06-8.05a2.67 2.67 0 0 1 3.77 3.77l-8.06 8.05a1.33 1.33 0 0 1-1.88-1.88l7.35-7.36"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 16l4.5-4.5 3 3L15 11l5 5"/><circle cx="9" cy="8.5" r="1.5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
   </defs>
 </svg>
 
@@ -816,10 +915,22 @@
         </div>
       </div>
     </div>
+    <div class="field-group">
+      <div class="field">
+        <label>Attachments (PDF or Photo)</label>
+        <div class="attach-list" id="f-attach-list"></div>
+        <div class="attach-add" id="f-attach-add">
+          <svg><use href="#i-paperclip"/></svg>
+          Add PDF or Photo
+        </div>
+      </div>
+    </div>
     <div id="form-delete-wrap" class="hidden">
       <div class="btn danger" id="form-delete">Delete Item</div>
     </div>
   </div>
+
+  <input type="file" id="f-attach-file" accept="application/pdf,image/*" multiple style="display:none" />
 </div>
 
 <!-- Settings sheet -->
@@ -887,6 +998,12 @@
   <input type="file" id="import-file" accept="application/json,.json" style="display:none" />
 </div>
 
+<!-- Full-screen image preview -->
+<div class="preview-bg" id="preview-bg">
+  <div class="preview-close" id="preview-close" aria-label="Close preview"><svg><use href="#i-x"/></svg></div>
+  <img id="preview-img" alt="" />
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -899,11 +1016,20 @@ const STORAGE_KEY = "toolbox.items.v1";
 const DAY = 86400000;
 const SOON_THRESHOLD_DAYS = 30;
 
+/* Attachments are stored as base64 data URLs inside each item, so they
+ * ride along in the JSON backup and transfer to a new phone automatically.
+ * Photos are downscaled + re-encoded to keep localStorage small; PDFs are
+ * kept as-is. We warn past these sizes to avoid blowing the storage quota. */
+const IMG_MAX_DIM = 1600;          // longest edge, px, after downscale
+const IMG_JPEG_QUALITY = 0.72;
+const ATTACH_WARN_BYTES = 8 * 1024 * 1024;   // warn on a single big file
+
 let state = {
   items: [],
   filter: "all",
   search: "",
-  editingId: null
+  editingId: null,
+  formAttachments: []   // working copy while the form sheet is open
 };
 
 /* ---------- Persistence ---------- */
@@ -914,7 +1040,18 @@ function loadItems() {
   } catch (e) { state.items = []; }
 }
 function saveItems() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    return true;
+  } catch (e) {
+    // Most likely the storage quota was exceeded by large attachments.
+    alert(
+      "Couldn't save — your device's storage for this app is full.\n\n" +
+      "This usually means an attached PDF or photo is too large. " +
+      "Try removing or replacing a big attachment, then save again."
+    );
+    return false;
+  }
 }
 
 /* ---------- Utilities ---------- */
@@ -975,6 +1112,209 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
   }[c]));
+}
+
+/* ---------- Attachments ---------- */
+function isImageType(t)  { return typeof t === "string" && t.startsWith("image/"); }
+function isPdfType(t)    { return t === "application/pdf"; }
+
+function fmtBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(0) + " KB";
+  return (n / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+// Rough byte size of a base64 data URL (the payload after the comma).
+function dataUrlBytes(url) {
+  if (!url) return 0;
+  const i = url.indexOf(",");
+  const b64 = i >= 0 ? url.slice(i + 1) : url;
+  return Math.floor(b64.length * 3 / 4);
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error || new Error("read failed"));
+    r.readAsDataURL(file);
+  });
+}
+
+// Downscale + re-encode an image file to a compact JPEG data URL.
+// Falls back to the original data URL if anything goes wrong.
+function compressImage(file) {
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      URL.revokeObjectURL(url);
+      resolve(result);
+    };
+    // Safety net: if the image never decodes, don't hang "Add" forever —
+    // fall back to storing the original file bytes.
+    const timer = setTimeout(() => finish(null), 8000);
+    img.onload = () => {
+      clearTimeout(timer);
+      try {
+        let { width, height } = img;
+        const scale = Math.min(1, IMG_MAX_DIM / Math.max(width, height));
+        width  = Math.max(1, Math.round(width  * scale));
+        height = Math.max(1, Math.round(height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const out = canvas.toDataURL("image/jpeg", IMG_JPEG_QUALITY);
+        finish({ dataUrl: out, type: "image/jpeg" });
+      } catch (e) {
+        finish(null);
+      }
+    };
+    img.onerror = () => { clearTimeout(timer); finish(null); };
+    img.src = url;
+  });
+}
+
+// Turn selected files (from the Files app or Photos) into attachment records.
+async function addAttachmentFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  let added = 0;
+  for (const file of files) {
+    try {
+      let type = file.type || "";
+      let dataUrl;
+      if (isImageType(type)) {
+        const compressed = await compressImage(file);
+        dataUrl = compressed ? compressed.dataUrl : await readFileAsDataURL(file);
+        if (compressed) type = compressed.type;
+      } else if (isPdfType(type) || /\.pdf$/i.test(file.name)) {
+        type = "application/pdf";
+        dataUrl = await readFileAsDataURL(file);
+      } else {
+        // Unknown type — keep it, but store whatever the browser gives us.
+        dataUrl = await readFileAsDataURL(file);
+      }
+      if (!dataUrl) continue;
+      const size = dataUrlBytes(dataUrl);
+      if (size > ATTACH_WARN_BYTES) {
+        const ok = confirm(
+          `"${file.name}" is large (${fmtBytes(size)}). Big files can fill up ` +
+          `your device's storage for this app. Add it anyway?`
+        );
+        if (!ok) continue;
+      }
+      state.formAttachments.push({
+        id: uid(),
+        name: file.name || (isPdfType(type) ? "Document.pdf" : "Photo.jpg"),
+        type,
+        size,
+        data: dataUrl,
+        added: new Date().toISOString()
+      });
+      added++;
+    } catch (e) {
+      toast("Couldn't add a file");
+    }
+  }
+  if (added) {
+    renderFormAttachments();
+    toast(added === 1 ? "Attachment added" : `${added} attachments added`);
+  }
+}
+
+function removeFormAttachment(id) {
+  state.formAttachments = state.formAttachments.filter(a => a.id !== id);
+  renderFormAttachments();
+}
+
+function attachThumb(att) {
+  if (isImageType(att.type)) {
+    return `<div class="attach-thumb"><img src="${att.data}" alt="" /></div>`;
+  }
+  const cls = isPdfType(att.type) ? "attach-thumb pdf" : "attach-thumb";
+  const icon = isPdfType(att.type) ? "#i-doc" : "#i-paperclip";
+  return `<div class="${cls}"><svg><use href="${icon}"/></svg></div>`;
+}
+
+function renderFormAttachments() {
+  const wrap = document.getElementById("f-attach-list");
+  if (!wrap) return;
+  wrap.innerHTML = state.formAttachments.map(att => `
+    <div class="attach-row" data-id="${escapeHtml(att.id)}">
+      ${attachThumb(att)}
+      <div class="attach-info">
+        <div class="attach-name">${escapeHtml(att.name)}</div>
+        <div class="attach-meta">${isPdfType(att.type) ? "PDF" : (isImageType(att.type) ? "Photo" : "File")} · ${fmtBytes(att.size)}</div>
+      </div>
+      <div class="attach-remove" data-remove="${escapeHtml(att.id)}" aria-label="Remove"><svg><use href="#i-x"/></svg></div>
+    </div>`).join("");
+
+  wrap.querySelectorAll("[data-remove]").forEach(el => {
+    el.addEventListener("click", () => removeFormAttachment(el.dataset.remove));
+  });
+}
+
+// Convert a stored data URL back into a Blob so we can open it in a tab.
+function dataUrlToBlob(dataUrl) {
+  const [head, body] = dataUrl.split(",");
+  const mime = (head.match(/data:([^;]+)/) || [])[1] || "application/octet-stream";
+  const bin = atob(body);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+// Tapping an attachment: images open in the preview overlay; PDFs (and
+// anything else) open in a new tab via a temporary object URL, which iOS
+// Safari handles reliably.
+function openAttachment(att) {
+  if (!att || !att.data) return;
+  if (isImageType(att.type)) {
+    showPreview(att.data);
+    return;
+  }
+  try {
+    const blob = dataUrlToBlob(att.data);
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (!w) {
+      // Popup blocked — fall back to a download so the file is still reachable.
+      downloadFile(att.name || "attachment", blob);
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) {
+    toast("Couldn't open attachment");
+  }
+}
+
+function showPreview(src) {
+  document.getElementById("preview-img").src = src;
+  document.getElementById("preview-bg").classList.add("show");
+}
+function hidePreview() {
+  document.getElementById("preview-bg").classList.remove("show");
+  document.getElementById("preview-img").src = "";
+}
+
+// Sanitize an attachment record coming from an imported backup.
+function sanitizeAttachment(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  if (typeof raw.data !== "string" || !raw.data.startsWith("data:")) return null;
+  const type = typeof raw.type === "string" ? raw.type : "application/octet-stream";
+  return {
+    id: raw.id ? String(raw.id) : uid(),
+    name: raw.name ? String(raw.name) : "Attachment",
+    type,
+    size: Number(raw.size) || dataUrlBytes(raw.data),
+    data: raw.data,
+    added: raw.added || new Date().toISOString()
+  };
 }
 
 /* ---------- Toast ---------- */
@@ -1090,6 +1430,22 @@ function openDetail(id) {
     ? `<div class="notes${hasSchedule ? '' : ' notes-large'}">${escapeHtml(it.notes)}</div>`
     : `<div class="notes empty-notes${hasSchedule ? '' : ' notes-large'}">No notes added.</div>`;
 
+  const attachments = Array.isArray(it.attachments) ? it.attachments : [];
+  const attachmentsHtml = attachments.length
+    ? `<div class="section-title" style="padding: 18px 0 8px;">Attachments</div>
+       <div class="attach-list">
+         ${attachments.map(att => `
+           <div class="attach-row tappable" data-att="${escapeHtml(att.id)}">
+             ${attachThumb(att)}
+             <div class="attach-info">
+               <div class="attach-name">${escapeHtml(att.name)}</div>
+               <div class="attach-meta">${isPdfType(att.type) ? "PDF" : (isImageType(att.type) ? "Photo" : "File")} · ${fmtBytes(att.size)}</div>
+             </div>
+             <div class="attach-open"><svg><use href="#i-chevron"/></svg></div>
+           </div>`).join("")}
+       </div>`
+    : "";
+
   const badgeIcon = s.level === 'bad' ? '⚠'
                   : s.level === 'warn' ? '⏰'
                   : s.level === 'good' ? '✓' : '○';
@@ -1116,6 +1472,7 @@ function openDetail(id) {
       <div class="item-name">${escapeHtml(it.title || "Untitled")}</div>
       ${headerBlock}
       ${notesHtml}
+      ${attachmentsHtml}
     </div>
     ${hasSchedule ? `
       <div class="btn secondary" id="mark-done">Mark Done Today</div>
@@ -1128,6 +1485,13 @@ function openDetail(id) {
     it.updated = new Date().toISOString();
     saveItems(); render(); openDetail(id);
     toast("Marked done today");
+  });
+
+  document.getElementById("detail-content").querySelectorAll("[data-att]").forEach(el => {
+    el.addEventListener("click", () => {
+      const att = attachments.find(a => a.id === el.dataset.att);
+      if (att) openAttachment(att);
+    });
   });
 
   showSheet("detail");
@@ -1150,6 +1514,12 @@ function openForm(id) {
   document.getElementById("f-sched-n").value = it?.schedule?.n ?? 6;
   document.getElementById("f-sched-unit").value = it?.schedule?.unit ?? "month";
 
+  // Work on a copy so cancelling the form discards attachment changes too.
+  state.formAttachments = Array.isArray(it?.attachments)
+    ? it.attachments.map(a => ({ ...a }))
+    : [];
+  renderFormAttachments();
+
   document.getElementById("form-delete-wrap").classList.toggle("hidden", !editing);
 
   showSheet("form");
@@ -1166,28 +1536,36 @@ function saveForm() {
   const enabled = document.getElementById("f-sched-toggle").classList.contains("on");
   const n = parseInt(document.getElementById("f-sched-n").value, 10) || 1;
   const unit = document.getElementById("f-sched-unit").value;
+  const attachments = state.formAttachments.map(a => ({ ...a }));
 
+  const wasEdit = !!state.editingId;
   if (state.editingId) {
     const it = state.items.find(x => x.id === state.editingId);
     if (it) {
+      const prev = { ...it };
       it.title = title; it.notes = notes; it.date = date;
       it.schedule = { enabled, n, unit };
+      it.attachments = attachments;
       it.updated = new Date().toISOString();
+      // If the save fails (e.g. storage full), roll the item back untouched.
+      if (!saveItems()) { Object.assign(it, prev); return; }
     }
   } else {
-    state.items.push({
+    const it = {
       id: uid(),
       title, notes, date,
       schedule: { enabled, n, unit },
+      attachments,
       created: todayISO(),
       updated: new Date().toISOString()
-    });
+    };
+    state.items.push(it);
+    if (!saveItems()) { state.items.pop(); return; }
   }
-  saveItems();
   hideSheet("form");
   render();
-  const wasEdit = !!state.editingId;
   state.editingId = null;
+  state.formAttachments = [];
   toast(wasEdit ? "Saved" : "Added");
 }
 
@@ -1267,6 +1645,9 @@ function importJSON(file) {
                 unit: ["day","week","month","year"].includes(raw.schedule.unit) ? raw.schedule.unit : "month"
               }
             : { enabled: false, n: 6, unit: "month" },
+          attachments: Array.isArray(raw.attachments)
+            ? raw.attachments.map(sanitizeAttachment).filter(Boolean)
+            : [],
           created: raw.created || todayISO(),
           updated: new Date().toISOString()
         };
@@ -1325,13 +1706,14 @@ function exportXLSX() {
       "Next Due": due ? due.toISOString().slice(0,10) : "",
       "Status": s.level === "bad" ? "Overdue" : s.level === "warn" ? "Due Soon" : s.level === "good" ? "On Track" : "No Schedule",
       "Days Until Due": (s.daysUntil ?? ""),
+      "Attachments": Array.isArray(it.attachments) ? it.attachments.length : 0,
       "Created": it.created || ""
     };
   });
   const ws = XLSX.utils.json_to_sheet(rows);
   ws["!cols"] = [
     { wch: 28 }, { wch: 40 }, { wch: 12 }, { wch: 16 },
-    { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }
+    { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Toolbox Items");
@@ -1376,10 +1758,28 @@ function init() {
     setTimeout(() => openForm(id), 200);
   });
 
-  document.getElementById("form-cancel").addEventListener("click", () => { state.editingId = null; hideSheet("form"); });
-  document.getElementById("form-bg").addEventListener("click", () => { state.editingId = null; hideSheet("form"); });
+  document.getElementById("form-cancel").addEventListener("click", () => { state.editingId = null; state.formAttachments = []; hideSheet("form"); });
+  document.getElementById("form-bg").addEventListener("click", () => { state.editingId = null; state.formAttachments = []; hideSheet("form"); });
   document.getElementById("form-save").addEventListener("click", saveForm);
   document.getElementById("form-delete").addEventListener("click", deleteCurrent);
+
+  // Attachments: open the picker (Files app / Photos on iPhone), then ingest.
+  document.getElementById("f-attach-add").addEventListener("click", () => {
+    document.getElementById("f-attach-file").click();
+  });
+  document.getElementById("f-attach-file").addEventListener("change", async e => {
+    // Snapshot to an array before clearing the input — e.target.files is a
+    // live FileList that empties the moment we reset value.
+    const files = Array.from(e.target.files);
+    e.target.value = "";
+    await addAttachmentFiles(files);
+  });
+
+  // Image preview overlay
+  document.getElementById("preview-close").addEventListener("click", hidePreview);
+  document.getElementById("preview-bg").addEventListener("click", e => {
+    if (e.target.id === "preview-bg") hidePreview();
+  });
   document.getElementById("f-sched-toggle").addEventListener("click", () => {
     const t = document.getElementById("f-sched-toggle");
     t.classList.toggle("on");
