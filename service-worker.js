@@ -1,5 +1,5 @@
 /* Toolbox service worker — caches app shell so it works offline once loaded. */
-const CACHE = "toolbox-v1";
+const CACHE = "toolbox-v2";
 const ASSETS = [
   "./",
   "./index.html",

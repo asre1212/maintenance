@@ -8,6 +8,8 @@ A clean, local-first iPhone web app for tracking items and their maintenance sch
 - Table-of-contents list view with status dots, search, and filter tabs
 - Card view when an item is selected, with notes, dates, schedule, and next-due date
 - Add a maintenance schedule per item — every N days, weeks, months, or years
+- Attach PDFs (from the **Files** app) or **photos** to any item — tap to view; PDFs open in a new tab, photos in a full-screen preview
+- Attachments are embedded in the JSON backup, so they transfer to a new phone right along with your items
 - Color-coded status: green (on track), amber (due within 30 days), red (overdue)
 - Quick stats dashboard: Overdue · Due Soon · On Track
 - One-tap **Mark Done Today** to bump the schedule
@@ -50,6 +52,8 @@ If you want the URL to be just `https://<user>.github.io/<repo>/toolbox/`, push 
 1. On the **old** phone: open Toolbox → ⚙ Settings → **Export Backup (JSON)**.
 2. AirDrop / email / iCloud-Drive that `.json` file to your new phone.
 3. On the **new** phone: install Toolbox the same way, open Settings → **Import Backup (JSON)**, and pick the file. Your items merge in.
+
+Attachments (PDFs and photos) are stored inside the backup file itself, so they come across with everything else — no separate step. To keep storage manageable, photos are automatically downscaled and re-encoded when you add them; PDFs are kept as-is.
 
 ## How statuses work
 
