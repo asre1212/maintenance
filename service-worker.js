@@ -1,5 +1,5 @@
 /* Toolbox service worker — caches app shell so it works offline once loaded. */
-const CACHE = "toolbox-v2";
+const CACHE = "toolbox-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -20,7 +20,7 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k.startsWith("toolbox-") && k !== CACHE).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
